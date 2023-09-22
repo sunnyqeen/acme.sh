@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+#API Key
+#Dynu_APIKey="0b71cae7a0994f6b8ddf94571cdb760d"
+#
 #Client ID
 #Dynu_ClientId="0b71cae7-a099-4f6b-8ddf-94571cdb760d"
 #
@@ -22,23 +25,27 @@ dns_dynu_add() {
   fulldomain=$1
   txtvalue=$2
 
-  if [ -z "$Dynu_ClientId" ] || [ -z "$Dynu_Secret" ]; then
-    Dynu_ClientId=""
-    Dynu_Secret=""
-    _err "Dynu client id and secret is not specified."
-    _err "Please create you API client id and secret and try again."
-    return 1
-  fi
-
-  #save the client id and secret to the account conf file.
-  _saveaccountconf Dynu_ClientId "$Dynu_ClientId"
-  _saveaccountconf Dynu_Secret "$Dynu_Secret"
-
-  if [ -z "$Dynu_Token" ]; then
-    _info "Getting Dynu token."
-    if ! _dynu_authentication; then
-      _err "Can not get token."
+  if [ -z "$Dynu_APIKey" ]; then
+    if [ -z "$Dynu_ClientId" ] || [ -z "$Dynu_Secret" ]; then
+      Dynu_ClientId=""
+      Dynu_Secret=""
+      _err "Dynu client id and secret is not specified."
+      _err "Please create you API client id and secret and try again."
+      return 1
     fi
+
+    #save the client id and secret to the account conf file.
+    _saveaccountconf Dynu_ClientId "$Dynu_ClientId"
+    _saveaccountconf Dynu_Secret "$Dynu_Secret"
+
+    if [ -z "$Dynu_Token" ]; then
+      _info "Getting Dynu token."
+      if ! _dynu_authentication; then
+        _err "Can not get token."
+      fi
+    fi
+  else
+    _saveaccountconf Dynu_APIKey "$Dynu_APIKey"
   fi
 
   _debug "Detect root zone"
@@ -68,23 +75,27 @@ dns_dynu_rm() {
   fulldomain=$1
   txtvalue=$2
 
-  if [ -z "$Dynu_ClientId" ] || [ -z "$Dynu_Secret" ]; then
-    Dynu_ClientId=""
-    Dynu_Secret=""
-    _err "Dynu client id and secret is not specified."
-    _err "Please create you API client id and secret and try again."
-    return 1
-  fi
-
-  #save the client id and secret to the account conf file.
-  _saveaccountconf Dynu_ClientId "$Dynu_ClientId"
-  _saveaccountconf Dynu_Secret "$Dynu_Secret"
-
-  if [ -z "$Dynu_Token" ]; then
-    _info "Getting Dynu token."
-    if ! _dynu_authentication; then
-      _err "Can not get token."
+  if [ -z "$Dynu_APIKey" ]; then
+    if [ -z "$Dynu_ClientId" ] || [ -z "$Dynu_Secret" ]; then
+      Dynu_ClientId=""
+      Dynu_Secret=""
+      _err "Dynu client id and secret is not specified."
+      _err "Please create you API client id and secret and try again."
+      return 1
     fi
+
+    #save the client id and secret to the account conf file.
+    _saveaccountconf Dynu_ClientId "$Dynu_ClientId"
+    _saveaccountconf Dynu_Secret "$Dynu_Secret"
+
+    if [ -z "$Dynu_Token" ]; then
+      _info "Getting Dynu token."
+      if ! _dynu_authentication; then
+        _err "Can not get token."
+      fi
+    fi
+  else
+    _saveaccountconf Dynu_APIKey "$Dynu_APIKey"
   fi
 
   _debug "Detect root zone."
@@ -186,7 +197,11 @@ _dynu_rest() {
   data="$3"
   _debug "$ep"
 
-  export _H1="Authorization: Bearer $Dynu_Token"
+  if [ -z "$Dynu_APIKey" ]; then
+    export _H1="Authorization: Bearer $Dynu_Token"
+  else
+    export _H1="API-Key: $Dynu_APIKey"
+  fi
   export _H2="Content-Type: application/json"
 
   if [ "$data" ] || [ "$m" = "DELETE" ]; then
